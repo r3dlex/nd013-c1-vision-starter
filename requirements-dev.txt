@@ -1,0 +1,5 @@
+-r requirements.txt
+# Dev only dependencies
+nox>=2020.12.31 
+flake8>=3.9.0
+black>=19.0
