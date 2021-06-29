@@ -10,22 +10,60 @@ from psutil import cpu_count
 
 from utils import *
 
+def calculate_tf_box_from_waymo(box):
+    """
+    Calculates the tf box from a waymo box
+    args:
+        - box: An annotation.box in waymo coordinates
+    returns:
+        - a normalized tf box
+    """
+    return box.center_x - 0.5 * box.length,\
+        box.center_x + 0.5 * box.length,\
+        box.center_y - 0.5 * box.width,\
+        box.center_y + 0.5 * box.width
+
 
 def create_tf_example(filename, encoded_jpeg, annotations):
     """
     This function create a tf.train.Example from the Waymo frame.
-
     args:
         - filename [str]: name of the image
         - encoded_jpeg [bytes]: jpeg encoded image
         - annotations [protobuf object]: bboxes and classes
-
     returns:
         - tf_example [tf.Train.Example]: tf example in the objection detection api format.
     """
 
-    # TODO: Implement function to convert the data
-
+    # Load encoded image into input a memory buffer
+    encoded_jpg_io = io.BytesIO(encoded_jpeg)
+    
+    # Open image and extract its width and height
+    image = Image.open(encoded_jpg_io)
+    width, height = image.size
+    
+    # mapping class names to class id's
+    mapping = {1: 'vehicle', 2: 'pedestrian', 4: 'cyclist'}
+    image_format = b'jpg'
+    xmins = []
+    xmaxs = []
+    ymins = []
+    ymaxs = []
+    classes_text = []
+    classes = []
+    filename = filename.encode('utf8')
+    
+    # convert annotations of bounding boxes using center coordinates
+    for ann in annotations:
+        xmin, xmax, ymin, ymax = calculate_tf_box_from_waymo(ann.box)
+        xmins.append(xmin / width)
+        xmaxs.append(xmax / width)
+        ymins.append(ymin / height)
+        ymaxs.append(ymax / height)    
+        classes.append(ann.type)
+        classes_text.append(mapping[ann.type].encode('utf8'))
+    
+    # create protobuf messages into tf.train.Example
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': int64_feature(height),
         'image/width': int64_feature(width),
@@ -40,17 +78,16 @@ def create_tf_example(filename, encoded_jpeg, annotations):
         'image/object/class/text': bytes_list_feature(classes_text),
         'image/object/class/label': int64_list_feature(classes),
     }))
+    
     return tf_example
 
 
 def download_tfr(filepath, temp_dir):
     """
     download a single tf record 
-
     args:
         - filepath [str]: path to the tf record file
         - temp_dir [str]: path to the directory where the raw data will be saved
-
     returns:
         - local_path [str]: path where the file is saved
     """
@@ -73,7 +110,6 @@ def download_tfr(filepath, temp_dir):
 def process_tfr(filepath, data_dir):
     """
     process a Waymo tf record into a tf api tf record
-
     args:
         - filepath [str]: path to the Waymo tf record file
         - data_dir [str]: path to the destination directory
@@ -127,6 +163,3 @@ if __name__ == "__main__":
 
     workers = [download_and_process.remote(fn, temp_dir, data_dir) for fn in filenames[:100]]
     _ = ray.get(workers)
-
-
-
