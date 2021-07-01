@@ -1,6 +1,5 @@
 FROM tensorflow/tensorflow:2.4.0-gpu-jupyter
 
-SU
 RUN apt-get update --fix-missing && apt-get install -y \
     ffmpeg \
     git \
@@ -21,7 +20,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
-RUN pip3 install --no-cache-dir git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+#RUN pip3 install --no-cache-dir git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
 
 ENV TF_CPP_MIN_LOG_LEVEL=2
 

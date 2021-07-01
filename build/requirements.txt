@@ -4,3 +4,4 @@ matplotlib==3.0.3
 Pillow==8.2.0
 ray==1.4.0
 waymo-open-dataset-tf-2-4-0
+pycocotools-fix
