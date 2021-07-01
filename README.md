@@ -223,6 +223,43 @@ Dark with poor contrast
 
 I've conducted two experiments one just adding augmentations and keeping the learning rate and other parameters (`training/experiment1`) and other providing both more aggressive augmentations and training parameters (`training/experiment2`) get the the following charts below after training the model with the new augmentations.
 
+Example changes in the experiment 1 and 2 configurations:
+```json
+...
+data_augmentation_options {
+    random_crop_image {
+      min_object_covered: 0.0
+      min_aspect_ratio: 0.75
+      max_aspect_ratio: 3.0
+      min_area: 0.75
+      max_area: 1.0
+      overlap_thresh: 0.0
+    }
+  }
+  data_augmentation_options {
+    random_rgb_to_gray {
+      probability: 0.4
+    }
+  }
+  data_augmentation_options {
+    random_adjust_contrast {
+      min_delta: 0.8
+      max_delta: 1.0
+    }
+  }
+  data_augmentation_options {
+    random_adjust_brightness {
+      max_delta: 0.4
+    }
+  }
+  data_augmentation_options {
+    random_horizontal_flip {
+    }
+  }
+  ...
+```
+These augment options provide a higher random variation of the inputs which should decrease overfitting and improve the algorithm overall extrapolation for the evaluation sets.
+
 ![Legend](fig/nn/legend.png)
 ![Learning Experimments](fig/nn/learning_experiments.png)
 The training losses are radically different. Brown is the `experiment2`, pink is the `experiment1` and orange the `reference`. Final losses are still quite high in all cases
